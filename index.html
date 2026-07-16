@@ -86,7 +86,7 @@
       <img src="https://raw.githubusercontent.com/Andrea91x/immagini-UWR/cf9e13f6240e9fe83e99be32db149476337eb038/Logo-Firs.jpeg" alt="FIRS UWR">
     </div>
     <div class="ring"></div>
-    <p>Apertura del portale…</p>
+    <p>Apertura del portale… <span style="opacity:.45">v3</span></p>
   </div>
 
   <div id="fallback">
@@ -112,11 +112,19 @@
         d.parentNode.removeChild(d);
         return v;
       }
-      var _sat=insetPx('top'), _sab=insetPx('bottom');
-      var _url=URL_APP+(URL_APP.indexOf('?')>-1?'&':'?')+'sat='+_sat+'&sab='+_sab;
-
-      fbLink.href = _url;
-      iframe.src  = _url;   // carica il portale passando le safe-area
+      // Le zone sicure a volte valgono 0 se lette subito: rimisuro finche'
+      // non danno un valore (fino a ~1s), POI apro il portale con i valori giusti.
+      var _sat = 0, _sab = 0;
+      function _misuraEApri(tentativo) {
+        _sat = insetPx('top'); _sab = insetPx('bottom');
+        if (_sat === 0 && _sab === 0 && tentativo < 8) {
+          return requestAnimationFrame(function(){ _misuraEApri(tentativo + 1); });
+        }
+        var _url = URL_APP + (URL_APP.indexOf('?')>-1?'&':'?') + 'sat=' + _sat + '&sab=' + _sab;
+        fbLink.href = _url;
+        iframe.src  = _url;   // carica il portale passando le zone sicure misurate
+      }
+      requestAnimationFrame(function(){ _misuraEApri(0); });
 
       // Canale di riserva: spedisce le stesse misure DENTRO il portale con un
       // messaggio diretto, ripetuto per ~12 secondi (il portale vive in una
